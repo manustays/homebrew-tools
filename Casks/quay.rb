@@ -7,13 +7,14 @@ cask "quay" do
   desc "Menubar launcher for CLI coding agents"
   homepage "https://github.com/manustays/quay"
 
-  # in-app tauri updater handles upgrades; keep brew from fighting it
-  auto_updates true
-
   livecheck do
     url :url
     strategy :github_latest
   end
+
+  # in-app tauri updater handles upgrades; keep brew from fighting it
+  auto_updates true
+  depends_on macos: :catalina
 
   app "Quay.app"
 
