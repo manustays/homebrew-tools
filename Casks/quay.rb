@@ -14,6 +14,8 @@ cask "quay" do
 
   # in-app tauri updater handles upgrades; keep brew from fighting it
   auto_updates true
+  # binary's Mach-O target is 10.13 (x86_64) / 11.0 (arm64), but Homebrew disabled
+  # depends_on values below :catalina, so this is the lowest expressible floor.
   depends_on macos: :catalina
 
   app "Quay.app"
