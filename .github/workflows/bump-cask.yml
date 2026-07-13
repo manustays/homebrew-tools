@@ -1,0 +1,60 @@
+name: Bump quay cask
+
+# Keeps Casks/quay.rb in sync with the latest manustays/quay release.
+# Casks are pinned manifests, so version + sha256 must be rewritten each release.
+# Self-contained: reads the upstream release, recomputes the sha, commits the bump.
+# Pushes to this repo, so the built-in GITHUB_TOKEN is enough (no PAT).
+
+on:
+  schedule:
+    - cron: "0 12 * * *" # daily; use the Run workflow button for an instant bump
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump to latest quay release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # "Latest" release excludes drafts and prereleases.
+          tag=$(gh release view --repo manustays/quay --json tagName --jq .tagName)
+          version=${tag#v}                       # 0.16.0 (for the version field + filename)
+          current=$(grep -m1 -E '^\s*version ' Casks/quay.rb | sed -E 's/.*"([^"]+)".*/\1/')
+
+          if [ "$version" = "$current" ]; then
+            echo "cask already at $version — nothing to do"
+            exit 0
+          fi
+
+          # Use the raw $tag (not v$version) so a tag without a 'v' prefix still resolves.
+          url="https://github.com/manustays/quay/releases/download/${tag}/Quay_${version}_universal.dmg"
+          sha=$(curl -fsSL "$url" | shasum -a 256 | awk '{print $1}')
+
+          # Guard: a valid sha256 is exactly 64 hex chars. Bail before touching the file otherwise.
+          if ! printf '%s' "$sha" | grep -qE '^[0-9a-f]{64}$'; then
+            echo "::error::got a bad sha256 for $url: '$sha'"
+            exit 1
+          fi
+
+          sed -i -E "s|^(\s*version ).*|\1\"${version}\"|" Casks/quay.rb
+          sed -i -E "s|^(\s*sha256 ).*|\1\"${sha}\"|" Casks/quay.rb
+
+          # Guard: the seds must have actually changed something.
+          if git diff --quiet Casks/quay.rb; then
+            echo "::error::version mismatch ($current -> $version) but the cask file did not change"
+            exit 1
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(quay): bump to ${version}"
+          git push
