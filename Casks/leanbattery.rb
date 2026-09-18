@@ -1,6 +1,6 @@
 cask "leanbattery" do
   version "0.1.0"
-  sha256 "REPLACE_WITH_SHA256_OF_PUBLISHED_ZIP"
+  sha256 "a99b2d3850e3971e9a62fa7aad628ae765472366e0435b589c60d30fb9c07cc2"
 
   url "https://github.com/manustays/lean-battery/releases/download/v#{version}/LeanBattery-#{version}.zip"
   name "LeanBattery"
