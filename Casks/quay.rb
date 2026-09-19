@@ -1,6 +1,6 @@
 cask "quay" do
-  version "0.19.0"
-  sha256 "0e85a63440ad16f15a39193be5abb1612b16582a1d28fe798f0654469a59dafe"
+  version "0.20.0"
+  sha256 "c699c923128385fbae41f778ba11b2074c1e71df98e7949fa9c676a5c716a263"
 
   url "https://github.com/manustays/quay/releases/download/v#{version}/Quay_#{version}_universal.dmg"
   name "Quay"
